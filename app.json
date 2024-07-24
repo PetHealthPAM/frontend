@@ -20,7 +20,12 @@
       "adaptiveIcon": {
         "foregroundImage": "./src/app/imgs/splash.png",
         "backgroundColor": "#fff"
-      }
+      },
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
     },
     "web": {
       "favicon": "./src/app/imgs/splash.png"

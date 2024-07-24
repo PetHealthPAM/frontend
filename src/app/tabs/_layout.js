@@ -39,6 +39,8 @@ export default function TabsLayout() {
         name="calendario"
         options={{
           title: "Calendário",
+          headerShown: false,
+          headerShadowVisible: false,
           headerTitleStyle: { fontSize: 24, fontWeight: "bold" },
           headerTitleContainerStyle: { marginTop: 20, marginLeft: 30 },
         }}
@@ -55,6 +57,8 @@ export default function TabsLayout() {
         name="perfil"
         options={{
           title: "Perfil",
+          headerShown: false,
+          headerShadowVisible: false,
           headerTitleStyle: { fontSize: 24, fontWeight: "bold" },
           headerTitleContainerStyle: { marginTop: 20, marginLeft: 30 },
         }}

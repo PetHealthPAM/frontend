@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
   titulo3: {
     fontSize: 18,
     marginTop: 20,
-    fontFamily: 'Poppins_100Thin'
+    fontFamily: 'Poppins_Thin'
   },
   link: {
     color: '#7E57C2',
