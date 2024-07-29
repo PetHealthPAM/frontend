@@ -20,22 +20,10 @@ const [fontLoaded] = useFonts({
   Poppins_600SemiBold_Italic,
 });
 
-  const router = useRouter();
 
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-
-  function BtnCadastrar() {
-    if (password !== confirmPassword) {
-      Alert.alert("Erro", "As senhas não coincidem.");
-    } else {
-      // Lógica para processar os dados de cadastro
-      Alert.alert("Sucesso", "Cadastro realizado com sucesso!");
-      router.push("/tabs/home");
-    }
-  }
+  
+  
+  function BtnCadastrar() {}
 
   const handleLoginGoogle = () => {
     // Lógica para login com Google aqui
@@ -52,32 +40,23 @@ const [fontLoaded] = useFonts({
           <Text style={styles.title}>Cadastrar-se</Text>
         </View>
         <View>
-          <TextInput
-            style={styles.input}
-            placeholder="Nome"
-            value={name}
-            onChangeText={(text) => setNome(text)}
-          />
+          
           <TextInput
             style={styles.input}
             placeholder="Email"
             keyboardType="email-address"
-            value={email}
-            onChangeText={(text) => setEmail(text)}
+
           />
           <TextInput
             style={styles.input}
             placeholder="Senha"
-            secureTextEntry
-            value={password}
-            onChangeText={(text) => setSenha(text)}
+
+
           />
           <TextInput
             style={styles.input}
             placeholder="Confirmar Senha"
-            secureTextEntry
-            value={confirmPassword}
-            onChangeText={(text) => setConfirmarSenha(text)}
+
           />
         </View>
 
