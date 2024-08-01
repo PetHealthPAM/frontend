@@ -1,121 +1,113 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, FlatList, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
-import { fetchDogBreeds, fetchCatBreeds } from '../utils/api'; // Funções para buscar raças
+import { StyleSheet, View, Text, TextInput, Button, TouchableOpacity, Alert, Image } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import { Picker as RNPicker } from '@react-native-picker/picker';
+import { useNavigation } from '@react-navigation/native';
 
-export default function AddPet() {
-    const router = useRouter();
-    const [step, setStep] = useState(1);
-    const [petType, setPetType] = useState('');
-    const [petName, setPetName] = useState('');
-    const [petBreed, setPetBreed] = useState('');
+// imagens
+import DogImage from '../imgs/cachorro.png';
+import CatImage from '../imgs/gatow.png';
+
+export default function AdicionarPet() {
+    const navigation = useNavigation();
+    const [name, setName] = useState('');
+    const [species, setSpecies] = useState('');
+    const [breed, setBreed] = useState('');
     const [breeds, setBreeds] = useState([]);
+    const [image, setImage] = useState(null);
 
     useEffect(() => {
-        if (petType === 'cachorro') {
-            fetchDogBreeds().then((breeds) => setBreeds(breeds));
-        } else if (petType === 'gato') {
-            fetchCatBreeds().then((breeds) => setBreeds(breeds));
-        }
-    }, [petType]);
+        const fetchBreeds = async () => {
+            if (species) {
+                try {
+                    const response = species === 'dog'
+                        ? await axios.get('https://dog.ceo/api/breeds/list/all')
+                        : await axios.get('https://api.thecatapi.com/v1/breeds');
 
-    const handleNext = () => {
-        if (step === 1 && !petType) {
-            Alert.alert('Por favor, escolha a espécie do seu pet.');
-        } else if (step === 2 && !petName) {
-            Alert.alert('Por favor, insira o nome do seu pet.');
-        } else if (step === 3 && !petBreed) {
-            Alert.alert('Por favor, escolha a raça do seu pet.');
-        } else {
-            setStep(step + 1);
-        }
-    };
+                    const breedsData = species === 'dog'
+                        ? Object.keys(response.data.message)
+                        : response.data.map(breed => breed.name);
 
-    const handleBack = () => {
-        if (step > 1) {
-            setStep(step - 1);
-        } else {
-            router.back();
-        }
-    };
+                    setBreeds(breedsData);
+                } catch (error) {
+                    console.error('Error fetching breeds:', error);
+                }
+            }
+        };
 
-    const handleFinish = () => {
-        // Simular adição do pet e voltar à tela Home
-        Alert.alert('Pet cadastrado com sucesso!');
-        router.push('../tabs/home');
+        fetchBreeds();
+    }, [species]);
+
+    const handleAddPet = async () => {
+        try {
+            const pet = {
+                id: Date.now().toString(),
+                name,
+                species,
+                breed,
+                image: species === 'dog' ? DogImage : CatImage,
+            };
+
+            const existingPets = await AsyncStorage.getItem('pets');
+            const pets = existingPets ? JSON.parse(existingPets) : [];
+
+            pets.push(pet);
+            await AsyncStorage.setItem('pets', JSON.stringify(pets));
+
+            Alert.alert('Sucesso', 'Pet cadastrado com sucesso!');
+            navigation.goBack();
+        } catch (error) {
+            console.error('Error adding pet:', error);
+            Alert.alert('Erro', 'Erro ao cadastrar o pet.');
+        }
     };
 
     return (
         <View style={styles.container}>
-            {step === 1 && (
-                <View style={styles.stepContainer}>
-                    <Text style={styles.question}>Qual a espécie do seu pet?</Text>
-                    <TouchableOpacity
-                        style={styles.optionButton}
-                        onPress={() => setPetType('gato')}
-                        selected={petType === 'gato'}
+            <Text style={styles.title}>Adicionar Pet</Text>
+            <TextInput
+                style={styles.input}
+                placeholder="Nome do pet"
+                value={name}
+                onChangeText={setName}
+            />
+            <Text style={styles.label}>Espécie:</Text>
+            <RNPicker
+                selectedValue={species}
+                onValueChange={(itemValue) => {
+                    setSpecies(itemValue);
+                    setBreed('');
+                }}
+                style={styles.picker}
+            >
+                <RNPicker.Item label="Selecione a espécie" value="" />
+                <RNPicker.Item label="Cachorro" value="dog" />
+                <RNPicker.Item label="Gato" value="cat" />
+            </RNPicker>
+            {species && (
+                <>
+                    <Text style={styles.label}>Raça:</Text>
+                    <RNPicker
+                        selectedValue={breed}
+                        onValueChange={(itemValue) => setBreed(itemValue)}
+                        style={styles.picker}
                     >
-                        <Text style={styles.optionText}>Gato</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={styles.optionButton}
-                        onPress={() => setPetType('cachorro')}
-                        selected={petType === 'cachorro'}
-                    >
-                        <Text style={styles.optionText}>Cachorro</Text>
-                    </TouchableOpacity>
+                        <RNPicker.Item label="Selecione a raça" value="" />
+                        {breeds.map((b, index) => (
+                            <RNPicker.Item key={index} label={b} value={b} />
+                        ))}
+                    </RNPicker>
+                </>
+            )}
+            <TouchableOpacity style={styles.button} onPress={handleAddPet}>
+                <Text style={styles.buttonText}>Adicionar Pet</Text>
+            </TouchableOpacity>
+            {species && (
+                <View style={styles.imageContainer}>
+                    <Image source={species === 'dog' ? DogImage : CatImage} style={styles.image} />
                 </View>
             )}
-            {step === 2 && (
-                <View style={styles.stepContainer}>
-                    <Text style={styles.question}>Insira o nome do seu pet</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Nome do Pet"
-                        value={petName}
-                        onChangeText={setPetName}
-                    />
-                </View>
-            )}
-            {step === 3 && (
-                <View style={styles.stepContainer}>
-                    <Text style={styles.question}>Escolha a raça do seu pet</Text>
-                    <FlatList
-                        data={breeds}
-                        renderItem={({ item }) => (
-                            <TouchableOpacity
-                                style={styles.breedOption}
-                                onPress={() => setPetBreed(item.name)}
-                            >
-                                <Text style={styles.breedText}>{item.name}</Text>
-                            </TouchableOpacity>
-                        )}
-                        keyExtractor={(item) => item.id}
-                    />
-                </View>
-            )}
-            {step === 4 && (
-                <View style={styles.stepContainer}>
-                    <Text style={styles.successMessage}>Pet cadastrado com sucesso!</Text>
-                </View>
-            )}
-            <View style={styles.navigation}>
-                {step < 4 && (
-                    <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-                        <Text style={styles.buttonText}>Voltar</Text>
-                    </TouchableOpacity>
-                )}
-                {step < 4 && (
-                    <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
-                        <Text style={styles.buttonText}>Próximo</Text>
-                    </TouchableOpacity>
-                )}
-                {step === 4 && (
-                    <TouchableOpacity style={styles.finishButton} onPress={handleFinish}>
-                        <Text style={styles.buttonText}>Concluir</Text>
-                    </TouchableOpacity>
-                )}
-            </View>
         </View>
     );
 }
@@ -124,74 +116,52 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 20,
-        backgroundColor: '#fff',
+        backgroundColor: '#f8f8f8',
     },
-    stepContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    question: {
+    title: {
         fontSize: 24,
         fontWeight: 'bold',
         marginBottom: 20,
-    },
-    optionButton: {
-        width: '80%',
-        padding: 15,
-        borderRadius: 10,
-        backgroundColor: '#593C9D',
-        alignItems: 'center',
-        marginVertical: 10,
-    },
-    optionText: {
-        color: '#fff',
-        fontSize: 18,
+        color: '#593C9D',
     },
     input: {
-        width: '80%',
         height: 40,
-        borderColor: '#ccc',
+        borderColor: '#ddd',
         borderWidth: 1,
-        borderRadius: 10,
+        marginBottom: 20,
         paddingHorizontal: 10,
-        marginTop: 20,
+        borderRadius: 5,
+        backgroundColor: '#fff',
     },
-    breedOption: {
-        padding: 15,
-        borderBottomColor: '#ccc',
-        borderBottomWidth: 1,
+    picker: {
+        height: 50,
+        width: '100%',
+        marginBottom: 20,
+        backgroundColor: '#fff',
+        borderRadius: 5,
     },
-    breedText: {
+    label: {
         fontSize: 18,
+        marginBottom: 10,
+        color: '#593C9D',
     },
-    successMessage: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: 'green',
-    },
-    navigation: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginTop: 20,
-    },
-    backButton: {
-        backgroundColor: '#ccc',
-        padding: 15,
-        borderRadius: 10,
-    },
-    nextButton: {
+    button: {
         backgroundColor: '#593C9D',
         padding: 15,
-        borderRadius: 10,
-    },
-    finishButton: {
-        backgroundColor: 'green',
-        padding: 15,
-        borderRadius: 10,
+        borderRadius: 5,
+        alignItems: 'center',
     },
     buttonText: {
         color: '#fff',
         fontSize: 18,
+    },
+    imageContainer: {
+        marginTop: 20,
+        alignItems: 'center',
+    },
+    image: {
+        width: 100,
+        height: 100,
+        borderRadius: 10,
     },
 });

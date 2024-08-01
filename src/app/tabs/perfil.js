@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, Image, TouchableOpacity, TextInput, FlatList, Alert, Platform } from 'react-native';
+import { StyleSheet, Text, View, Image, TouchableOpacity, TextInput, FlatList, Alert, Modal, Button } from 'react-native';
 import { useRouter } from 'expo-router';
 import { AntDesign, Feather, Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -21,6 +21,8 @@ export default function Perfil() {
     const [filteredData, setFilteredData] = useState([]);
     const [userName, setUserName] = useState('Nome do Usuário');
     const [profileImage, setProfileImage] = useState(null);
+    const [isModalVisible, setIsModalVisible] = useState(false);
+    const [newUserName, setNewUserName] = useState(userName);
 
     const handleSearch = (query) => {
         setSearchQuery(query);
@@ -53,16 +55,12 @@ export default function Perfil() {
     };
 
     const handleEditProfile = () => {
-        Alert.prompt(
-            'Editar Nome',
-            'Digite o novo nome do usuário:',
-            [
-                { text: 'Cancelar', style: 'cancel' },
-                { text: 'OK', onPress: (text) => setUserName(text) },
-            ],
-            'plain-text',
-            userName
-        );
+        setIsModalVisible(true);
+    };
+
+    const handleSave = () => {
+        setUserName(newUserName);
+        setIsModalVisible(false);
     };
 
     return (
@@ -102,11 +100,11 @@ export default function Perfil() {
                 </View>
             </View>
             <View style={styles.settingsContainer}>
-                <TouchableOpacity style={styles.settingItem} onPress={() => router.push('./informacoes-pessoais')}>
+                <TouchableOpacity style={styles.settingItem} onPress={() => router.push('../stacks/infoUser')}>
                     <Ionicons name="person-outline" size={24} color="#000" />
                     <Text style={styles.settingText}>Informações Pessoais</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.settingItem} onPress={() => router.push('./meus-pets')}>
+                <TouchableOpacity style={styles.settingItem} onPress={() => router.push('../stacks/pets')}>
                     <Ionicons name="paw-outline" size={24} color="#000" />
                     <Text style={styles.settingText}>Meus Pets</Text>
                 </TouchableOpacity>
@@ -115,6 +113,25 @@ export default function Perfil() {
                     <Text style={styles.settingText}>Sair</Text>
                 </TouchableOpacity>
             </View>
+
+            {/* Modal para editar informações pessoais */}
+            <Modal visible={isModalVisible} transparent={true}>
+                <View style={styles.modalContainer}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>Editar Informações Pessoais</Text>
+                        <TextInput
+                            style={styles.modalInput}
+                            value={newUserName}
+                            onChangeText={setNewUserName}
+                            placeholder="Digite o novo nome"
+                        />
+                        <Button title="Salvar" onPress={handleSave} />
+                        <TouchableOpacity style={styles.closeButton} onPress={() => setIsModalVisible(false)}>
+                            <Text style={styles.closeText}>Cancelar</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 }
@@ -193,5 +210,40 @@ const styles = StyleSheet.create({
         backgroundColor: '#f9f9f9',
         borderBottomWidth: 1,
         borderBottomColor: '#ddd',
+    },
+    modalContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalContent: {
+        backgroundColor: '#fff',
+        padding: 20,
+        borderRadius: 10,
+        width: '80%',
+        alignItems: 'center',
+    },
+    modalTitle: {
+        fontSize: 20,
+        marginBottom: 10,
+    },
+    modalInput: {
+        width: '100%',
+        padding: 10,
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderRadius: 5,
+        marginBottom: 10,
+    },
+    closeButton: {
+        marginTop: 10,
+        backgroundColor: '#593C9D',
+        padding: 10,
+        borderRadius: 5,
+    },
+    closeText: {
+        color: '#fff',
+        fontSize: 16,
     },
 });

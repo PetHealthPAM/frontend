@@ -8,9 +8,8 @@ export default function StackLayout() {
             <Stack.Screen name="cadastro" options={{ headerShadowVisible: false, headerShown: false }} />
             <Stack.Screen name="favoritos" options={{ headerShadowVisible: false, headerShown: false }} />
             <Stack.Screen name="AdicionarPet" options={{ headerShadowVisible: false, headerShown: false }} />
-            <Stack.Screen name="EscolherRacaPet" options={{ headerShadowVisible: false, headerShown: false }} />
-            <Stack.Screen name="inserir" options={{ headerShadowVisible: false, headerShown: false }} />
-            <Stack.Screen name="PetCadastrado" options={{ headerShadowVisible: false, headerShown: false }} />
+            <Stack.Screen name="infoUser" options={{ headerShadowVisible: false, headerShown: false }} />
+            <Stack.Screen name="pets" options={{ headerShadowVisible: false, headerShown: false }} />
         </Stack>
     );
 }
