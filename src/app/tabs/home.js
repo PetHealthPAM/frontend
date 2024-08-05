@@ -1,28 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { StyleSheet, Text, View, Image, TouchableOpacity, TextInput, FlatList, ScrollView } from 'react-native';
 import Swiper from 'react-native-swiper';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { AntDesign } from '@expo/vector-icons';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Importando imagens do slider
 import image1 from '../imgs/slider1.png';
 import image2 from '../imgs/slider2.png';
 import image3 from '../imgs/slider3.png';
 
 const API_KEY_DOG = 'live_a18kGWDwOwGdBaVo228FKBjEjHpRxTFT1KCN64vg8autI0DK1fRncxBn53TQa7KL';
-const API_KEY_CAT = 'live_rlswPycwAxMFCNOEuB0Gp9gIik708ockKXnjesGMXgMHyTxeT0LlIbjet3TPQrcM'; 
-
-const searchData = [
-    { id: '1', title: 'Home', route: './home' },
-    { id: '2', title: 'Calendário', route: './calendario' },
-    { id: '3', title: 'Adote', route: './adote' },
-    { id: '4', title: 'Perfil', route: './perfil' },
-    { id: '5', title: 'Favoritos', route: '../stacks/favoritos' },
-    { id: '6', title: 'Configurações', route: '../stacks/perfil' },
-    { id: '7', title: 'Meus Pets', route: '../stacks/favoritos' },
-    { id: '8', title: 'Informações pessoais', route: '../stacks/favoritos' },
-];
+const API_KEY_CAT = 'live_rlswPycwAxMFCNOEuB0Gp9gIik708ockKXnjesGMXgMHyTxeT0LlIbjet3TPQrcM';
 
 export default function Home() {
     const router = useRouter();
@@ -50,6 +39,23 @@ export default function Home() {
 
         fetchData();
     }, []);
+
+    useFocusEffect(
+        useCallback(() => {
+            const fetchPets = async () => {
+                try {
+                    const storedPets = await AsyncStorage.getItem('pets');
+                    if (storedPets) {
+                        setPets(JSON.parse(storedPets));
+                    }
+                } catch (error) {
+                    console.error('Error fetching pets:', error);
+                }
+            };
+
+            fetchPets();
+        }, [])
+    );
 
     const handleSearch = (query) => {
         setSearchQuery(query);
@@ -89,24 +95,23 @@ export default function Home() {
                     <AntDesign name="hearto" size={30} color="#fff" />
                 </TouchableOpacity>
             </View>
-            
-            {/* Swiper */}
+
             <View style={styles.swiperContainer}>
-            <Swiper style={styles.wrapper} autoplay={true} showsPagination={false}>
-                <View style={styles.slide}>
-                    <Image source={image1} style={styles.image} />
-                </View>
-                <View style={styles.slide}>
-                    <Image source={image2} style={styles.image} />
-                    <TouchableOpacity style={styles.touchable} onPress={handleAdoptionPress}>
-                        <Text style={styles.touchableText}>Adotar</Text>
-                    </TouchableOpacity>
-                </View>
-                <View style={styles.slide}>
-                    <Image source={image3} style={styles.image} />
-                </View>
-            </Swiper>
-        </View>
+                <Swiper style={styles.wrapper} autoplay={true} showsPagination={false}>
+                    <View style={styles.slide}>
+                        <Image source={image1} style={styles.image} />
+                    </View>
+                    <View style={styles.slide}>
+                        <Image source={image2} style={styles.image} />
+                        <TouchableOpacity style={styles.adoptionButton} onPress={handleAdoptionPress}>
+                            <Text style={styles.adoptionButtonText}>Adotar</Text>
+                        </TouchableOpacity>
+                    </View>
+                    <View style={styles.slide}>
+                        <Image source={image3} style={styles.image} />
+                    </View>
+                </Swiper>
+            </View>
 
             {searchQuery.length > 0 && (
                 <FlatList
@@ -119,25 +124,28 @@ export default function Home() {
                     )}
                 />
             )}
-            
+
             <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitle}>Seus Pets</Text>
             </View>
-            <TouchableOpacity style={styles.addButton} onPress={handleAddPet}>
-                <AntDesign name="pluscircleo" size={60} color="#593C9D" />
-            </TouchableOpacity>
-            <FlatList
-                horizontal
-                data={pets}
-                renderItem={({ item }) => (
-                    <View style={styles.petItem}>
-                        <Image source={{ uri: item.photo }} style={styles.petPhoto} />
-                        <Text style={styles.petName}>{item.name}</Text>
-                    </View>
-                )}
-                keyExtractor={(item) => item.id}
-                style={styles.petList}
-            />
+            <View style={styles.petsContainer}>
+                <TouchableOpacity style={styles.addButton} onPress={handleAddPet}>
+                    <AntDesign name="pluscircleo" size={60} color="#593C9D" />
+                </TouchableOpacity>
+                <FlatList
+                    horizontal
+                    data={pets}
+                    renderItem={({ item }) => (
+                        <View style={styles.petItem}>
+                            <Image source={item.image} style={styles.petPhoto} />
+                            <Text style={styles.petName}>{item.name}</Text>
+                        </View>
+                    )}
+                    keyExtractor={(item) => item.id}
+                    style={styles.petList}
+                />
+            </View>
+
             <View style={styles.breedSection}>
                 <Text style={styles.breedTitle}>Raças de Cães</Text>
                 <FlatList
@@ -156,6 +164,7 @@ export default function Home() {
                     style={styles.breedList}
                 />
             </View>
+
             <View style={styles.breedSection2}>
                 <Text style={styles.breedTitle}>Raças de Gatos</Text>
                 <FlatList
@@ -191,21 +200,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         flexDirection: 'row',
         paddingHorizontal: 20,
-    },
-    touchable: {
-        position: 'absolute',
-        bottom: 20,
-        backgroundColor: '#593C9D',
-        paddingVertical: 10,  
-        paddingHorizontal: 25,
-        borderRadius: 30, 
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginLeft: 40,
-    },
-    touchableText: {
-        color: '#FFFFFF',
-        fontSize: 16,
     },
     searchBar: {
         flex: 1,
@@ -245,56 +239,57 @@ const styles = StyleSheet.create({
         fontSize: 24,
         fontWeight: 'bold',
     },
+    petsContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
     addButton: {
         marginVertical: 10,
-        marginLeft: 30,
+        marginLeft: 20,
+        marginRight: 10,
     },
     petList: {
-        marginVertical: 10,
+        paddingLeft: 10,
     },
     petItem: {
-        marginHorizontal: 10,
         alignItems: 'center',
-        borderRadius: 10,
-        padding: 10,
+        marginRight: 10,
     },
     petPhoto: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
+        width: 100,
+        height: 100,
+        borderRadius: 50,
         marginBottom: 5,
     },
     petName: {
-        color: '#fff',
-        fontWeight: 'bold',
+        fontSize: 16,
     },
     breedSection: {
         marginVertical: 10,
         backgroundColor: '#593C9D',
-        borderRadius: 30,
+        borderRadius: 10,
         padding: 10,
-        marginLeft: 15,
-        marginRight: 15,
+        marginHorizontal: 10,
     },
     breedSection2: {
         marginVertical: 10,
         backgroundColor: '#593C9D',
-        borderRadius: 30,
+        borderRadius: 10,
         padding: 10,
-        marginLeft: 15,
-        marginRight: 15,
+        marginHorizontal: 10,
         marginBottom: 90,
     },
     breedTitle: {
         fontSize: 18,
-        fontWeight: 'bold',
         color: '#fff',
+        fontWeight: 'bold',
+        marginLeft: 5,
     },
     breedList: {
-        marginTop: 10,
+        paddingVertical: 10,
     },
     breedItem: {
-        marginHorizontal: 10,
+        marginRight: 10,
         alignItems: 'center',
     },
     breedPhoto: {
@@ -305,10 +300,21 @@ const styles = StyleSheet.create({
     breedName: {
         color: '#fff',
         marginTop: 5,
+        textAlign: 'center',
     },
-    searchResult: {
-        padding: 10,
-        fontSize: 16,
-        color: '#000',
+    adoptionButton: {
+        position: 'absolute',
+        bottom: 20,
+        left: '50%',
+        transform: [{ translateX: -140 }],
+        backgroundColor: '#593C9D',
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        borderRadius: 20,
+    },
+    adoptionButtonText: {
+        color: '#fff',
+        fontSize: 18,
+        fontWeight: 'bold',
     },
 });

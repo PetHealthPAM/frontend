@@ -49,6 +49,8 @@ export default function TabsLayout() {
         name="adote"
         options={{
           title: "Adote",
+          headerShown: false,
+          headerShadowVisible: false,
           headerTitleStyle: { fontSize: 24, fontWeight: "bold" },
           headerTitleContainerStyle: { marginTop: 20, marginLeft: 30 },
         }}

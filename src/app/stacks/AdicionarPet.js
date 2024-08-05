@@ -123,6 +123,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         marginBottom: 20,
         color: '#593C9D',
+        marginTop: 50,
     },
     input: {
         height: 40,
